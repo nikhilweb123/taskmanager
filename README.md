@@ -191,8 +191,12 @@ Toggles task between pending and completed status.
 
 1. Push your code to GitHub
 2. Import project to [Vercel](https://vercel.com)
-3. Add environment variables in Vercel dashboard
-4. Deploy
+3. **Add environment variables** (required or build fails):
+   - **Settings** → **Environment Variables**
+   - `NEXT_PUBLIC_SUPABASE_URL` = your Supabase Project URL
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = your Supabase anon key  
+   → See [VERCEL_DEPLOY.md](./VERCEL_DEPLOY.md) for step-by-step instructions.
+4. Deploy (or redeploy after adding vars)
 
 ```bash
 # Or use Vercel CLI
