@@ -49,11 +49,13 @@ Then run `npm install` and `npm run build`. If ESLint, Next.js, or Netlify tooli
 
 ```json
 "update-browserslist": "npx update-browserslist-db@latest",
-"postinstall": "npx update-browserslist-db@latest"
+"postinstall": "npx update-browserslist-db@latest",
+"build": "npm run update-browserslist && next build"
 ```
 
 - **`update-browserslist`:** Run manually when you want to refresh the DB.
-- **`postinstall`:** Runs after every `npm install`, so Browserslist stays up to date.
+- **`postinstall`:** Runs after every `npm install`.
+- **`build`:** Runs `update-browserslist` then `next build`. On **Vercel**, this ensures Browserslist is updated on every deploy (even with cached `node_modules`), so the “caniuse-lite is outdated” warning is avoided.
 
 ### 2.2 Commands to run
 
@@ -73,26 +75,28 @@ This clears: **“Browserslist: caniuse-lite is outdated. Please run npx update-
 
 ### 3.1 `next.config.js` (already configured)
 
-```js
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  // ... your existing config ...
-  webpack: (config) => {
-    // Suppress "Critical dependency: the request of a dependency is an expression"
-    // from @supabase/realtime-js (dynamic imports Webpack can't statically analyze).
-    config.ignoreWarnings = [
-      ...(Array.isArray(config.ignoreWarnings) ? config.ignoreWarnings : []),
-      { module: /node_modules[\\/]@supabase[\\/]realtime-js[\\/]/ },
-    ];
-    return config;
-  },
-};
+The config uses a **function** filter (module + message) plus a **message-only fallback** so the Supabase “Critical dependency” warning is suppressed on Vercel and locally:
 
-module.exports = nextConfig;
+```js
+webpack: (config) => {
+  config.ignoreWarnings = [
+    ...(Array.isArray(config.ignoreWarnings) ? config.ignoreWarnings : []),
+    (warning) => {
+      const msg = String(warning.message || '');
+      const mod = warning.module;
+      const id = mod?.identifier?.() ?? mod?.resource ?? '';
+      const isCritical = /Critical dependency: the request of a dependency is an expression/.test(msg);
+      const isRealtime = /@supabase[\\/]realtime-js|RealtimeClient\.js/.test(String(id));
+      return Boolean(isCritical && isRealtime);
+    },
+    { message: /Critical dependency: the request of a dependency is an expression/ },
+  ];
+  return config;
+},
 ```
 
-- **Target:** Only modules under `node_modules/@supabase/realtime-js/` (e.g. `RealtimeClient.js`).
-- **Effect:** That specific “Critical dependency” warning is suppressed; rest of Webpack behavior unchanged.
+- **Target:** Warnings from `@supabase/realtime-js` (e.g. `RealtimeClient.js`) with that exact message.
+- **Fallback:** Message-only match so it still works when module info differs (e.g. on Vercel).
 - **Runtime:** Supabase continues to work normally.
 
 ---
