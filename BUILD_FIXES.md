@@ -75,28 +75,27 @@ This clears: **“Browserslist: caniuse-lite is outdated. Please run npx update-
 
 ### 3.1 `next.config.js` (already configured)
 
-The config uses a **function** filter (module + message) plus a **message-only fallback** so the Supabase “Critical dependency” warning is suppressed on Vercel and locally:
+The config uses **three** mechanisms so the Supabase “Critical dependency” warning is suppressed on Vercel and locally:
+
+1. **`ignoreWarnings`** – message-based filter so webpack doesn’t treat it as a warning.
+2. **`stats.warningsFilter`** – filters it from stats output.
+3. **`FilterSupabaseWarningsPlugin`** – custom plugin that removes matching warnings from the compilation in `afterSeal`, so they never reach the build summary.
 
 ```js
+const supabaseWarning = /Critical dependency: the request of a dependency is an expression/;
+
+// custom plugin: filters compilation.warnings in afterSeal
+function FilterSupabaseWarningsPlugin() { ... }
+
 webpack: (config) => {
-  config.ignoreWarnings = [
-    ...(Array.isArray(config.ignoreWarnings) ? config.ignoreWarnings : []),
-    (warning) => {
-      const msg = String(warning.message || '');
-      const mod = warning.module;
-      const id = mod?.identifier?.() ?? mod?.resource ?? '';
-      const isCritical = /Critical dependency: the request of a dependency is an expression/.test(msg);
-      const isRealtime = /@supabase[\\/]realtime-js|RealtimeClient\.js/.test(String(id));
-      return Boolean(isCritical && isRealtime);
-    },
-    { message: /Critical dependency: the request of a dependency is an expression/ },
-  ];
+  config.ignoreWarnings = [..., { message: supabaseWarning }];
+  config.stats = { ...config.stats, warningsFilter: [supabaseWarning] };
+  config.plugins.push(new FilterSupabaseWarningsPlugin());
   return config;
 },
 ```
 
-- **Target:** Warnings from `@supabase/realtime-js` (e.g. `RealtimeClient.js`) with that exact message.
-- **Fallback:** Message-only match so it still works when module info differs (e.g. on Vercel).
+- **Target:** The exact “Critical dependency: the request of a dependency is an expression” message from `@supabase/realtime-js`.
 - **Runtime:** Supabase continues to work normally.
 
 ---
@@ -146,9 +145,11 @@ npm run build
 
 You should get:
 
-- No “Critical dependency” Supabase warning.
+- No “Critical dependency” Supabase warning and no “Compiled with warnings”.
 - No “caniuse-lite is outdated” Browserslist warning.
 - Possibly fewer npm deprecation messages thanks to ESLint upgrade.
+
+**npm “deprecated” warnings during install** (rimraf, glob, inflight, @humanwhocodes, eslint) come from transitive deps. We don’t use `overrides` because they can break the build. They will stay until you upgrade Next.js / ESLint.
 
 ---
 
@@ -168,7 +169,7 @@ If you prefer **not** to run Browserslist update on every `npm install`:
 |------|--------|
 | **ESLint** | `8.49.0` → `^8.57.0` in `package.json` |
 | **Browserslist** | `update-browserslist` script + `postinstall` running it |
-| **Supabase warning** | `webpack.ignoreWarnings` in `next.config.js` for `@supabase/realtime-js` |
+| **Supabase warning** | `ignoreWarnings` + `stats.warningsFilter` + `FilterSupabaseWarningsPlugin` in `next.config.js` |
 | **Supabase usage** | Single client in `lib/supabase.ts`, import only from there |
 | **rimraf / glob / inflight / @humanwhocodes** | Left as transitive; no overrides to avoid breaking Next/ESLint |
 

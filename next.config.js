@@ -1,4 +1,21 @@
 /** @type {import('next').NextConfig} */
+const supabaseWarning =
+  /Critical dependency: the request of a dependency is an expression/;
+
+/** Filters out Supabase realtime-js "Critical dependency" warnings from compilation. */
+function FilterSupabaseWarningsPlugin() {}
+FilterSupabaseWarningsPlugin.prototype.apply = function (compiler) {
+  compiler.hooks.compilation.tap('FilterSupabaseWarnings', (compilation) => {
+    compilation.hooks.afterSeal.tap('FilterSupabaseWarnings', () => {
+      if (!Array.isArray(compilation.warnings)) return;
+      const kept = compilation.warnings.filter(
+        (w) => !supabaseWarning.test(String(w.message || ''))
+      );
+      compilation.warnings.splice(0, compilation.warnings.length, ...kept);
+    });
+  });
+};
+
 const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
@@ -8,26 +25,17 @@ const nextConfig = {
     serverActions: true,
   },
   webpack: (config) => {
-    // Suppress "Critical dependency: the request of a dependency is an expression"
-    // from @supabase/realtime-js (dynamic imports Webpack can't statically analyze).
+    // Suppress "Critical dependency..." from @supabase/realtime-js (dynamic requires).
     // Safe to ignore: app works at runtime; see https://github.com/supabase/realtime-js/issues/265
     config.ignoreWarnings = [
       ...(Array.isArray(config.ignoreWarnings) ? config.ignoreWarnings : []),
-      (warning) => {
-        const msg = String(warning.message || '');
-        const mod = warning.module;
-        const id =
-          mod && typeof mod.identifier === 'function'
-            ? mod.identifier()
-            : mod?.resource ?? '';
-        const idStr = String(id);
-        const isCritical = /Critical dependency: the request of a dependency is an expression/.test(msg);
-        const isRealtime = /@supabase[\\/]realtime-js|RealtimeClient\.js/.test(idStr);
-        return Boolean(isCritical && isRealtime);
-      },
-      // Fallback: suppress by message if module check fails (e.g. Vercel webpack)
-      { message: /Critical dependency: the request of a dependency is an expression/ },
+      { message: supabaseWarning },
     ];
+    config.stats = {
+      ...(config.stats || {}),
+      warningsFilter: [supabaseWarning],
+    };
+    config.plugins.push(new FilterSupabaseWarningsPlugin());
     return config;
   },
 };
