@@ -1,5 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 
+/**
+ * Shared Supabase client. Import { supabase } or { supabase, Task } from here only.
+ * Single client + central config avoids duplicate bundles and keeps env usage correct.
+ */
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
