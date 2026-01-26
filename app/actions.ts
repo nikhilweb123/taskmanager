@@ -54,6 +54,7 @@ export async function createTask(formData: FormData): Promise<ActionResult> {
   try {
     const title = formData.get('title') as string;
     const description = formData.get('description') as string;
+    const status = (formData.get('status') as 'pending' | 'in_progress' | 'completed') || 'pending';
 
     if (!title || title.trim().length === 0) {
       return {
@@ -65,7 +66,7 @@ export async function createTask(formData: FormData): Promise<ActionResult> {
 
     const { error } = await supabase
       .from('tasks')
-      .insert([{ title: title.trim(), description: description?.trim() || '' }]);
+      .insert([{ title: title.trim(), description: description?.trim() || '', status }]);
 
     if (error) {
       return {
