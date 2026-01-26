@@ -24,7 +24,7 @@ const nextConfig = {
   experimental: {
     serverActions: true,
   },
-  webpack: (config) => {
+  webpack: (config, { isServer }) => {
     // Suppress "Critical dependency..." from @supabase/realtime-js (dynamic requires).
     // Safe to ignore: app works at runtime; see https://github.com/supabase/realtime-js/issues/265
     config.ignoreWarnings = [
@@ -38,13 +38,14 @@ const nextConfig = {
     config.plugins.push(new FilterSupabaseWarningsPlugin());
 
     // Fix: "Module not found: Can't resolve 'bufferutil'"
-    // ws (used by Supabase) tries to require these optional dependencies.
-    // Marking them as external prevents Webpack from trying to bundle them,
-    // avoiding the build error. ws handles their absence gracefully at runtime.
-    config.externals.push({
-      'utf-8-validate': 'commonjs utf-8-validate',
-      'bufferutil': 'commonjs bufferutil',
-    });
+    // 1. On the client side, we want to ignore these Node.js-specific modules.
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...(config.resolve.fallback || {}),
+        'bufferutil': false,
+        'utf-8-validate': false,
+      };
+    }
 
     return config;
   },
