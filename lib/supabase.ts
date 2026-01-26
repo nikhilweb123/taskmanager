@@ -10,7 +10,7 @@ const supabaseAnonKey = process.env.NEXT_SUPABASE_ANON_KEY!;
 if (!supabaseUrl || !supabaseAnonKey) {
   const msg =
     'Missing Supabase environment variables.\n' +
-    'Required: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY\n' +
+    'Required: NEXT_PUBLIC_SUPABASE_URL, NEXT_SUPABASE_ANON_KEY\n' +
     'Local: add them to .env.local (see .env.example).\n' +
     'Vercel: Project → Settings → Environment Variables → add both → redeploy.';
   throw new Error(msg);
