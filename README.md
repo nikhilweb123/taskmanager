@@ -3,22 +3,27 @@
 **Live Demo:** [https://taskmanager-zeta-gilt.vercel.app/](https://taskmanager-zeta-gilt.vercel.app/)
 
 ## 1. Project Overview
-This is a full-stack Task Management CRUD (Create, Read, Update, Delete) application designed to help users organize their daily tasks efficiently.
+This is a professional, full-stack Task Management Dashboard designed to help users organize their daily tasks efficiently with a modern, responsive user interface.
 
-The project was built using **Next.js (App Router)** and **Supabase** to demonstrate a modern, serverless architecture. Next.js was chosen for its powerful server-side rendering and routing capabilities, while Supabase provides a scalable, real-time backend-as-a-service (BaaS) that simplifies database management and API integration. This combination allows for a performant, maintainable, and rapid development workflow.
+The project was built using **Next.js (App Router)** and **Supabase** to demonstrate a scalable, serverless architecture. The UI has been significantly enhanced using **Shadcn UI** and **Tailwind CSS**, providing a polished, accessible, and interactive experience.
 
 ## 2. Tech Stack
 
-- **Next.js (App Router):** A React framework that enables server-side rendering, static site generation, and robust routing using the latest App Router architecture.
-- **Supabase:** An open-source Firebase alternative providing a PostgreSQL database, instant APIs, and real-time capabilities.
-- **Vercel:** A cloud platform for static sites and Serverless Functions, used for seamless deployment of the Next.js application.
+- **Framework:** [Next.js 14 (App Router)](https://nextjs.org/)
+- **Language:** [TypeScript](https://www.typescriptlang.org/)
+- **Database:** [Supabase](https://supabase.com/) (PostgreSQL)
+- **Styling:** [Tailwind CSS](https://tailwindcss.com/)
+- **UI Components:** [Shadcn UI](https://ui.shadcn.com/) (based on [Radix UI](https://www.radix-ui.com/))
+- **Icons:** [Lucide React](https://lucide.dev/)
+- **Date Handling:** [date-fns](https://date-fns.org/)
+- **Deployment:** [Vercel](https://vercel.com/)
 
 ## 3. Setup Instructions
 
 ### Prerequisites
-- **Node.js**: Version 18 or higher is recommended.
-- **npm** or **yarn**: Package manager for installing dependencies.
-- **Supabase account**: To create the backend project and database.
+- **Node.js**: Version 18 or higher.
+- **npm**: Package manager.
+- **Supabase account**: For the backend database.
 
 ### Steps to Run Locally
 
@@ -31,32 +36,20 @@ The project was built using **Next.js (App Router)** and **Supabase** to demonst
 2. **Install dependencies**
    ```bash
    npm install
-   # or
-   yarn install
    ```
 
 3. **Create a `.env.local` file**
-   Create a file named `.env.local` in the root directory of the project.
-
-4. **Add required environment variables**
-   Copy the keys from your Supabase project settings and add them to `.env.local`:
+   Create a file named `.env.local` in the root directory and add your Supabase credentials:
    ```env
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    ```
 
-5. **Run the development server**
+4. **Run the development server**
    ```bash
    npm run dev
-   # or
-   yarn dev
    ```
-   Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-### Environment Variables
-
-- `NEXT_PUBLIC_SUPABASE_URL`: The unique URL for your Supabase project's API.
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: The public API key that allows the client to interact with the Supabase database safely (respecting Row Level Security policies).
+   Open [http://localhost:3000](http://localhost:3000) to view the application.
 
 ## 4. Database Design
 
@@ -64,33 +57,44 @@ The project was built using **Next.js (App Router)** and **Supabase** to demonst
 
 | Column | Type | Description |
 | :--- | :--- | :--- |
-| `id` | `uuid` | Primary Key. Unique identifier for each task. |
-| `title` | `text` | The main heading or name of the task. |
-| `description` | `text` | Detailed information about the task. |
-| `status` | `text` | Current state of the task (e.g., 'Pending', 'Completed'). |
-| `created_at` | `timestamp` | The date and time when the task was created. |
+| `id` | `uuid` | Primary Key. Unique identifier. |
+| `title` | `text` | The task name (Required). |
+| `description` | `text` | Detailed info (Optional). |
+| `status` | `text` | 'pending' or 'completed'. |
+| `created_at` | `timestamp` | Creation timestamp (default: now()). |
 
 ## 5. Features Implemented
 
-- **Add new tasks:** Users can create tasks with a title and description.
-- **View all tasks:** Displays a list of all tasks, categorized or ordered by creation time.
-- **Edit task title and status:** Users can update the details of an existing task.
-- **Delete tasks:** Remove tasks that are no longer needed.
-- **Mark tasks as completed or pending:** Quick toggle to update task status.
-- **Basic validation:** Ensures required fields (like title) are not empty before submission.
-- **Responsive UI:** The application is mobile-friendly and adapts to different screen sizes.
+### 🎯 Dashboard & Task Management
+- **Modern Dashboard Layout:** A clean, single-page interface with a sticky header and consolidated task view.
+- **Create Task Modal:** Add tasks quickly via a dialog popup without losing context or page reloads.
+- **CRUD Operations:** Full capability to Create, Read, Update, and Delete tasks.
+
+### 🔍 Filtering, Sorting & Search
+- **Status Filtering:** Tab-based filtering for **All**, **Pending**, and **Completed** tasks with live counts.
+- **Time-Based Filtering:** Filter tasks by **All Time**, **Today**, or **Last 7 Days** using `date-fns`.
+- **Sorting:** Toggle between **Newest First** and **Oldest First**.
+- **Live Search:** Filter tasks instantly by title or description keyword.
+
+### 🎨 UI/UX Enhancements
+- **Shadcn UI Integration:** Utilizes robust components like `Select`, `Tabs`, `Dialog`, `Card`, and `Input`.
+- **Visual Feedback:** 
+  - Loading skeletons for smooth initial page loads.
+  - Informative empty states when no tasks match filters.
+  - Toast notifications for success/error actions.
+  - Status badges (Green for Completed, Orange for Pending).
+- **Responsive Design:** Fully optimized for mobile, tablet, and desktop screens.
 
 ## 6. Challenges Faced
 
-- **Supabase environment variable issues:** Initially, there were challenges in ensuring the environment variables were correctly exposed to the browser. This was resolved by prefixing them with `NEXT_PUBLIC_` so Next.js knows to inline them during the build process.
-- **Handling client-side and server-side logic:** Using the App Router required a clear distinction between Server Components and Client Components. This was managed by adding the `'use client'` directive to components that require interactivity (like forms and buttons) while keeping data fetching efficient on the server where possible.
-- **Managing async data fetching:** Ensuring the UI stays responsive while waiting for database operations involved using proper `async/await` patterns and loading states to provide feedback to the user.
-- **Deployment Build Errors:** Encountered "Module not found: Can't resolve 'bufferutil'" errors during Vercel deployment due to optional dependencies in the `ws` library used by Supabase. This was resolved by configuring `next.config.js` to ignore these Node.js-specific modules on the client-side build and installing them for the server-side.
+- **Supabase Environment Variables:** Ensuring variables were correctly exposed to the browser (`NEXT_PUBLIC_` prefix) for client-side connection.
+- **Component Architecture:** Integrating Shadcn UI components required careful setup of `tailwind.config.ts` and utility functions (`cn`) to ensure styles merged correctly without conflicts.
+- **Client vs. Server Components:** managing state for filters/search on the client side (`use client`) while keeping the initial data fetch efficient on the server.
+- **Deployment Build Errors:** Resolved "Module not found: Can't resolve 'bufferutil'" errors on Vercel by configuring `next.config.js` to handle optional dependencies in the `ws` library.
 
-## 7. Improvements (Optional)
+## 7. Future Improvements
 
-- **Authentication:** Implement Supabase Auth to allow users to have private task lists.
-- **Pagination or filtering:** Add features to sort tasks by date, status, or search by keyword.
-- **Better UI/UX:** Add animations, drag-and-drop reordering, and dark mode support.
-- **Row Level Security (RLS):** Secure the database so users can only access their own data (requires Auth).
-- **Optimistic updates:** Update the UI immediately before the server response to make the app feel faster.
+- **Authentication:** Implement Supabase Auth for user-specific task lists.
+- **Drag & Drop:** Allow users to reorder tasks manually.
+- **Dark Mode Toggle:** A user-facing switch to toggle between light and dark themes (codebase supports it).
+- **Categories/Tags:** Add a tagging system for better organization.
